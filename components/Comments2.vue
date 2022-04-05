@@ -1,0 +1,198 @@
+<template>
+  <div class="container-co">
+    <v-card max-width="75%" class="mx-auto">
+      <v-toolbar color="cyan" dark>
+        <v-toolbar-title>Comments</v-toolbar-title>
+      </v-toolbar>
+      <div class="v-list">
+        <transition-group
+          tag="div"
+          enter-active-class="animate__animated animate__backInLeft"
+          leave-active-class="animate__animated animate__bounceOut"
+        >
+          <div v-for="(item, index) in comments" :key="index" class="comment">
+            <div class="img">
+              <img
+                src="https://firebasestorage.googleapis.com/v0/b/myfirst-77744.appspot.com/o/4e237423-c1fd-4c43-aba0-646b836bd14a.jpg?alt=media&token=8a79fc3c-107f-4d77-9238-8fa20f67225a"
+                alt="commenter"
+              />
+            </div>
+            <div class="conntect">
+              <div class="commenter-name">
+                <p>{{ item.user_name }}</p>
+              </div>
+              <div class="comment-text">
+                <TextComment :comment='item.comment' />
+              </div>
+            </div>
+            <v-icon
+            v-if="
+            item.user_id === $store.state.userID || taskCreator ===  $store.state.userID "
+             color="error" @click="deleteComment(index,item)">mdi-delete</v-icon>
+          </div>
+        </transition-group>
+      </div>
+    </v-card>
+    <div class="addComment-btn" v-if="!showAddCommentToggle">
+      <v-btn @click="showAddCommentToggle = true" color="primary" dark>
+        Add Comment
+      </v-btn>
+    </div>
+    <div v-if="showAddCommentToggle">
+      <v-textarea
+        class="add-comment"
+        v-model="userComment"
+        color="teal"
+        :rules="rules"
+        counter="100"
+        label="Write You Comment"
+        height="70px"
+      >
+        <template>
+          <div>Bio <small>(optional)</small></div>
+        </template>
+      </v-textarea>
+      <div class="addComment-btn">
+        <v-btn color="error" dark @click="showAddCommentToggle = false"
+          >Cancel</v-btn
+        >
+        <v-btn color="primary" dark @click="createComment">Submit</v-btn>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import "animate.css";
+export default {
+  name: "Comments2",
+  props: {
+    comments: Array,
+    task_id: String,
+    taskCreator : Number,
+  },
+  data: () => ({
+    userComment: "",
+    rules: [(v) => v.length <= 100 || "Max 100 characters"],
+    showAddCommentToggle: false,
+  }),
+  methods: {
+    async createComment() {
+      const res = await this.$axios.post(
+        `/tasks-management/comments/addComment`,
+        {
+          task_id: this.task_id,
+          user_id: this.$store.state.userID,
+          user_name: this.$store.state.username,
+          comment: this.userComment,
+        }
+      );
+      console.log(res.data, "new comment");
+      if (res.status === 201) {
+        this.userComment = "";
+        this.$emit("createComment", res.data);
+        setTimeout(() => {
+          var container = this.$el.querySelector(".v-list");
+          container.scroll({ top: container.scrollHeight, behavior: "smooth" });
+        }, 40);
+      }
+    },
+    deleteComment(index,item){
+      this.$axios.delete( `/tasks-management/comments/deleteComment/${item.comment_id}`)
+        this.$emit("deleteComment", index);
+    }
+  },
+};
+</script>
+
+<style scoped>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+p {
+  margin: 0;
+}
+
+.container-co {
+  margin-top: 40px;
+  height: auto;
+}
+
+.v-list {
+  height: 400px;
+  overflow-y: auto;
+}
+
+.comment {
+  /* height: 180px; */
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  width: 90%;
+  margin: 5% auto;
+  box-shadow: 0px 3px 1px -2px rgb(0 0 0 / 20%),
+    0px 2px 2px 0px rgb(0 0 0 / 14%), 0px 1px 5px 0px rgb(0 0 0 / 12%);
+}
+
+.comment .img {
+  width: 10%;
+  display: flex;
+  justify-content: center;
+}
+
+.comment .img img {
+  display: block;
+  height: 50px;
+  width: 50px;
+  border-radius: 70%;
+}
+
+.comment .conntect {
+  width: 88%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.commenter-name p {
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.comment-text p {
+  font-size: 15px;
+}
+
+.v-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.v-list::-webkit-scrollbar-track {
+  background-color: #e4e4e4;
+  border-radius: 100px;
+}
+
+.v-list::-webkit-scrollbar-thumb {
+  border-radius: 100px;
+  background-image: linear-gradient(180deg, #00bcd4 0%, #1976d2 99%);
+  box-shadow: inset 2px 2px 5px 0 rgba(#fff, 0.5);
+}
+
+/* ----------------------------------------------------------------------------- */
+.add-comment {
+  width: 60%;
+  margin: 0 auto;
+  margin-top: 70px;
+}
+
+.addComment-btn {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin: 40px 0;
+}
+</style>
