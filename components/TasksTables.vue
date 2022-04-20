@@ -5,6 +5,7 @@
       leave-active-class="animate__animated animate__fadeOutUp"
     >
       <div v-if="inimation" class="container">
+        <TaskDraior />
         <div class="Main-Filter">
           <v-row>
             <v-col cols="12" sm="2">
@@ -67,7 +68,9 @@
                 ></v-text-field>
               </div>
               <div class="search-icon">
-                <v-icon large @click="search" color="indigo">mdi-magnify</v-icon>
+                <v-icon large @click="search" color="indigo"
+                  >mdi-magnify</v-icon
+                >
               </div>
             </div>
             <div class="creteTask">
@@ -298,6 +301,7 @@
 <script>
 import CreateTask from "./CreateTask.vue";
 import FilterForm from "./Search.vue";
+import TaskDraior from "./TaskDraios.vue";
 import Swal from "sweetalert2";
 import "animate.css";
 export default {
@@ -389,7 +393,7 @@ export default {
       chips: [],
       users: [],
       inimation: false,
-      categorys: ["None", "today", "tomorrow", "this week", "last week"],
+      categorys: ["All", "today", "tomorrow", "this week", "last week"],
       selectCategoryname: null,
       searchText: "",
     };
@@ -397,6 +401,7 @@ export default {
   components: {
     CreateTask,
     FilterForm,
+    TaskDraior,
   },
   methods: {
     rowClick: function (item, row) {
@@ -542,8 +547,8 @@ export default {
           this.general = false;
           this.created = false;
           this.deleted = false;
-          this.selectCategoryname=""
-          this.searchText = ""
+          this.selectCategoryname = "";
+          this.searchText = "";
           if (assinnedAction) this.headers.splice(2, 1);
           break;
         case "general":
@@ -553,8 +558,8 @@ export default {
           this.general = true;
           this.created = false;
           this.deleted = false;
-          this.selectCategoryname=""
-          this.searchText = ""
+          this.selectCategoryname = "";
+          this.searchText = "";
           if (!assinnedAction)
             this.headers.splice(2, 0, {
               text: "Assignned To",
@@ -571,8 +576,8 @@ export default {
           this.general = false;
           this.created = true;
           this.deleted = false;
-          this.selectCategoryname=""
-          this.searchText = ""
+          this.selectCategoryname = "";
+          this.searchText = "";
           if (!assinnedAction)
             this.headers.splice(2, 0, {
               text: "Assignned To",
@@ -588,15 +593,15 @@ export default {
           this.general = false;
           this.created = false;
           this.deleted = true;
-          this.selectCategoryname=""
-          this.searchText = ""
+          this.selectCategoryname = "";
+          this.searchText = "";
           if (assinnedAction) this.headers.splice(2, 1);
           break;
         default:
       }
     },
     filterTasks() {
-      this.searchText = ""
+      this.searchText = "";
       if (this.selectCategoryname === "today") {
         this.$store.commit("setTodayTasks");
       } else if (this.selectCategoryname === "None") {
@@ -745,7 +750,7 @@ export default {
     },
     search() {
       console.log(this.searchText);
-      this.$store.commit("search" , this.searchText)
+      this.$store.commit("search", this.searchText);
       //this.searchText = ""
     },
     // showCreateTask (){

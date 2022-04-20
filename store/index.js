@@ -8,6 +8,7 @@ export const state = () => ({
   fixSearchTasks: [],
   tasks: [],
   createTaskDialog: false,
+  taskDraior: false,
 });
 
 // contains your actions
@@ -148,11 +149,15 @@ export const actions = {
 export const mutations = {
   setTasks(state, payload) {
     state.fixTasks = payload;
-    state.fixSearchTasks = payload
+    state.fixSearchTasks = payload;
     return (state.tasks = payload);
   },
   setCreateTaskDialog(state, payload) {
     return (state.createTaskDialog = payload);
+  },
+  setTaskDraior(state, payload) {
+    console.log("payload", "payload", payload);
+    return (state.taskDraior = payload);
   },
   setTodayTasks(state, payload) {
     let todayDate = new Date(
@@ -167,7 +172,6 @@ export const mutations = {
     return (state.tasks = filterTasks);
   },
   setAllTasks(state, payload) {
-    console.log("all");
     state.fixSearchTasks = state.fixTasks;
     return (state.tasks = state.fixTasks);
   },
@@ -226,10 +230,210 @@ export const mutations = {
     const arr = state.fixSearchTasks.filter((element) => {
       return element.subject.toLowerCase().includes(text.toLowerCase());
     });
-    console.log(arr);
     return (state.tasks = arr);
+  },
+  searchByCreator(state, text) {
+    const arr = state.fixSearchTasks.filter((element) => {
+      return element.creator_name.toLowerCase().includes(text.toLowerCase());
+      // return true;
+    });
+    return (state.tasks = arr);
+  },
+
+
+/* -------------------------------------------------------------------------------------------------------------------------------------------------------- */
+
+
+  searchAll(state, payload) {
+    const { subject, creator, priority, workStatus } = payload;
+    console.log({ subject, creator, priority, workStatus });
+    if (subject && creator && priority && workStatus) {
+      // ---------------------- 1 --------------------------------- //
+      console.log("all");
+      const arr = state.fixSearchTasks.filter((element) => {
+        return (
+          element.subject.toLowerCase().includes(subject.toLowerCase()) &&
+          element.creator_name.toLowerCase().includes(creator.toLowerCase()) &&
+          element.priority === priority &&
+          element.status.toLowerCase() === workStatus.toLowerCase()
+        );
+        // return true;
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (subject && creator && priority) {
+      // ---------------------- 3-1 --------------------------------- //
+      console.log("all");
+      const arr = state.fixSearchTasks.filter((element) => {
+        return (
+          element.subject.toLowerCase().includes(subject.toLowerCase()) &&
+          element.creator_name.toLowerCase().includes(creator.toLowerCase()) &&
+          element.priority === priority
+        );
+        // return true;
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (creator && priority && workStatus) {
+      // ---------------------- 3-2 --------------------------------- //
+      console.log("all");
+      const arr = state.fixSearchTasks.filter((element) => {
+        return (
+          element.creator_name.toLowerCase().includes(creator.toLowerCase()) &&
+          element.priority === priority &&
+          element.status.toLowerCase() === workStatus.toLowerCase()
+        );
+        // return true;
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (subject && priority && workStatus) {
+      // ---------------------- 3-3 --------------------------------- //
+      console.log("all");
+      const arr = state.fixSearchTasks.filter((element) => {
+        return (
+          element.subject.toLowerCase().includes(subject.toLowerCase()) &&
+          element.priority === priority &&
+          element.status.toLowerCase() === workStatus.toLowerCase()
+        );
+        // return true;
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (subject && creator && workStatus) {
+      // ---------------------- 3-4 --------------------------------- //
+      console.log("all");
+      const arr = state.fixSearchTasks.filter((element) => {
+        return (
+          element.subject.toLowerCase().includes(subject.toLowerCase()) &&
+          element.creator_name.toLowerCase().includes(creator.toLowerCase()) &&
+          element.status.toLowerCase() === workStatus.toLowerCase()
+        );
+        // return true;
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (subject && creator) {
+      // ---------------------- 3-1 --------------------------------- //
+      console.log("all");
+      const arr = state.fixSearchTasks.filter((element) => {
+        return (
+          element.subject.toLowerCase().includes(subject.toLowerCase()) &&
+          element.creator_name.toLowerCase().includes(creator.toLowerCase())
+        );
+        // return true;
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (subject && priority) {
+      // ---------------------- 3-2 --------------------------------- //
+      console.log("all");
+      const arr = state.fixSearchTasks.filter((element) => {
+        return (
+          element.subject.toLowerCase().includes(subject.toLowerCase()) &&
+          element.priority === priority
+        );
+        // return true;
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (subject && workStatus) {
+      // ---------------------- 3-3 --------------------------------- //
+      console.log("all");
+      const arr = state.fixSearchTasks.filter((element) => {
+        return (
+          element.subject.toLowerCase().includes(subject.toLowerCase()) &&
+          element.status.toLowerCase() === workStatus.toLowerCase()
+        );
+        // return true;
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (creator && priority) {
+      // ---------------------- 3-4 --------------------------------- //
+      console.log("all");
+      const arr = state.fixSearchTasks.filter((element) => {
+        return (
+          element.creator_name.toLowerCase().includes(creator.toLowerCase()) &&
+          element.priority === priority
+        );
+        // return true;
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (creator && workStatus) {
+      // ---------------------- 3-5 --------------------------------- //
+      console.log("all");
+      const arr = state.fixSearchTasks.filter((element) => {
+        return (
+          element.creator_name.toLowerCase().includes(creator.toLowerCase()) &&
+          element.status.toLowerCase() === workStatus.toLowerCase()
+        );
+        // return true;
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (priority && workStatus) {
+      // ---------------------- 3-6 --------------------------------- //
+      console.log("all");
+      const arr = state.fixSearchTasks.filter((element) => {
+        return (
+          element.priority === priority &&
+          element.status.toLowerCase() === workStatus.toLowerCase()
+        );
+        // return true;
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (subject) {
+      // ---------------------- 1 fliter --------------------------------- //
+      console.log("subject");
+      const arr = state.fixSearchTasks.filter((element) => {
+        return element.subject.toLowerCase().includes(subject.toLowerCase());
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (creator) {
+      // ---------------------- 1 fliter --------------------------------- //
+      console.log("creator");
+      const arr = state.fixSearchTasks.filter((element) => {
+        return element.creator_name
+          .toLowerCase()
+          .includes(creator.toLowerCase());
+        // return true;
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (priority) {
+      // ---------------------- 1 fliter --------------------------------- //
+      console.log("priority");
+      const arr = state.fixSearchTasks.filter((element) => {
+        return element.priority === priority;
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (workStatus) {
+      // ---------------------- 1 --------------------------------- //
+      console.log("all");
+      const arr = state.fixSearchTasks.filter((element) => {
+        console.log(element.status.toLowerCase() , workStatus);
+        return element.status.toLowerCase() === workStatus.toLowerCase();
+        // return true;
+      });
+      return (state.tasks = arr);
+      // ----------------------------------------------------------------- //
+    } else if (!subject && !creator && !priority) {
+      return (state.tasks = state.fixSearchTasks);
+    }
   },
 };
 
 // your root getters
-export const getters = {};
+export const getters = {
+  getTaskDraior(state) {
+    return state.taskDraior;
+  },
+  getTasks(state) {
+    return state.tasks;
+  },
+};

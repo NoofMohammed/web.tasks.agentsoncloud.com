@@ -150,6 +150,10 @@
             :taskCreator="task.creator"
             @createComment="createComment"
             @deleteComment="deleteComment"
+            @addReplay="addReplay"
+            @deleteReplay="deleteReplay"
+            @updateComment="updateComment"
+            @updateReplay="updateReplay"
           />
           <!-- <div class="addComment-btn" v-if="!showAddCommentToggle">
             <v-btn @click="showAddCommentToggle = true" color="primary" dark>
@@ -331,6 +335,58 @@ export default {
     },
     deleteComment(id) {
       this.comments.splice(id, 1);
+    },
+    updateComment(comment_id, text) {
+      this.comments = this.comments.map((ele) => {
+        if (ele.comment.comment_id === comment_id) {
+          return { ...ele, comment: { ...ele.comment, comment: text } };
+        } else return ele;
+      });
+    },
+    async updateReplay(comment_id, replay_id, text) {
+      console.log(comment_id, replay_id, text);
+      this.comments = await this.getTaskComments();
+      // this.comments = this.comments.map((ele)=>{
+      //   if (ele.comment.comment_id === comment_id) {
+      //     console.log("yes must edit");
+      //     return {...ele , replays:ele.replays.map((el)=>{
+      //       if (el.replay_id === replay_id) return {...el , comment:text}
+      //       else return el
+      //     })}
+      //   }else {
+      //     return ele
+      //   }
+      // })
+    },
+    addReplay(newReplay) {
+      console.log("need to add replay");
+      console.log(this.comments, "before");
+      console.log(newReplay, "newReplay");
+      this.comments = this.comments.map((ele) => {
+        if (ele.comment.comment_id === newReplay.comment_id) {
+          return { ...ele, replays: [...ele.replays, newReplay] };
+        } else {
+          return ele;
+        }
+      });
+    },
+    deleteReplay(comment_id, replay_id, index) {
+      this.comments = this.comments.map((ele) => {
+        if (ele.comment.comment_id === comment_id) {
+          console.log("i am here");
+          return {
+            ...ele,
+            replays: ele.replays.filter((item) => {
+              return item.replay_id !== replay_id;
+            }),
+          };
+        } else {
+          return ele;
+        }
+      });
+      // this.comments[index].replays = this.comments[index].replays.filter((item) => {
+      //   return item.replay_id !== replay_id;
+      // });
     },
     async claimTask() {
       const res = await this.$axios.put(
@@ -562,8 +618,6 @@ p {
 }
 
 /* -------------------------------------------------------------------------------------*/
-
-
 
 .loading {
   flex: 1;

@@ -5,32 +5,57 @@
         <v-toolbar-title>Comments</v-toolbar-title>
       </v-toolbar>
       <div class="v-list">
-        <transition-group
-          tag="div"
-          enter-active-class="animate__animated animate__backInLeft"
-          leave-active-class="animate__animated animate__bounceOut"
-        >
-          <div v-for="(item, index) in comments" :key="index" class="comment">
-            <div class="img">
-              <img
-                src="https://firebasestorage.googleapis.com/v0/b/myfirst-77744.appspot.com/o/4e237423-c1fd-4c43-aba0-646b836bd14a.jpg?alt=media&token=8a79fc3c-107f-4d77-9238-8fa20f67225a"
-                alt="commenter"
-              />
-            </div>
-            <div class="conntect">
-              <div class="commenter-name">
-                <p>{{ item.user_name }}</p>
+        
+          <div class="all" v-for="(item, index) in comments" :key="index">
+            <div class="comment">
+              <div class="img">
+                <img
+                  src="https://firebasestorage.googleapis.com/v0/b/myfirst-77744.appspot.com/o/4e237423-c1fd-4c43-aba0-646b836bd14a.jpg?alt=media&token=8a79fc3c-107f-4d77-9238-8fa20f67225a"
+                  alt="commenter"
+                />
               </div>
-              <div class="comment-text">
-                <TextComment :comment='item.comment' />
+              <div class="conntect">
+                <div class="commenter-name">
+                  <p>{{ item.comment.user_name }}</p>
+                </div>
+                <div class="comment-text">
+                  <TextComment
+                    :comment="item.comment.comment"
+                    :flag="editArray[index]"
+                    :comment_id="item.comment.comment_id"
+                    type="comment"
+                    @updateComment="updateComment"
+                  />
+                </div>
               </div>
+              <v-icon
+                v-if="
+                  item.comment.user_id === $store.state.userID ||
+                  taskCreator === $store.state.userID
+                "
+                color="error"
+                @click="deleteComment(index, item.comment)"
+                >mdi-delete</v-icon
+              >
+              <v-icon
+                v-if="
+                  item.comment.user_id === $store.state.userID ||
+                  taskCreator === $store.state.userID
+                "
+                color="error"
+                @click="editComment(index, item)"
+                >mdi-pencil</v-icon
+              >
             </div>
-            <v-icon
-            v-if="
-            item.user_id === $store.state.userID || taskCreator ===  $store.state.userID "
-             color="error" @click="deleteComment(index,item)">mdi-delete</v-icon>
+            <!-- <p> show replay {{item.replays.length}}  </p> -->
+            <CommentReplays
+              :replays="item.replays"
+              :comment_id="item.comment.comment_id"
+              @newReplay="newReplay"
+              @deleteReplay="deleteReplay"
+              @updateReplay="updateReplay"
+            />
           </div>
-        </transition-group>
       </div>
     </v-card>
     <div class="addComment-btn" v-if="!showAddCommentToggle">
@@ -63,18 +88,23 @@
 </template>
 
 <script>
+import CommentReplays from "./CommentReplays.vue";
 import "animate.css";
 export default {
   name: "Comments2",
+  components: {
+    CommentReplays,
+  },
   props: {
     comments: Array,
     task_id: String,
-    taskCreator : Number,
+    taskCreator: Number,
   },
   data: () => ({
     userComment: "",
     rules: [(v) => v.length <= 100 || "Max 100 characters"],
     showAddCommentToggle: false,
+    editArray: [],
   }),
   methods: {
     async createComment() {
@@ -87,20 +117,55 @@ export default {
           comment: this.userComment,
         }
       );
-      console.log(res.data, "new comment");
       if (res.status === 201) {
         this.userComment = "";
         this.$emit("createComment", res.data);
+        this.editArray = [...this.editArray, false];
         setTimeout(() => {
           var container = this.$el.querySelector(".v-list");
           container.scroll({ top: container.scrollHeight, behavior: "smooth" });
         }, 40);
       }
     },
-    deleteComment(index,item){
-      this.$axios.delete( `/tasks-management/comments/deleteComment/${item.comment_id}`)
-        this.$emit("deleteComment", index);
-    }
+    deleteComment(index, item) {
+      this.$axios.delete(
+        `/tasks-management/comments/deleteComment/${item.comment_id}`
+      );
+      this.editArray = this.comments
+        .map((ele) => {
+          return false;
+        })
+        .slice(0, this.comments.length - 1);
+      console.log(this.editArray);
+      this.$emit("deleteComment", index);
+    },
+    editComment(index, item) {
+      this.editArray = this.editArray.map((ele, i) => {
+        if (index === i) return !ele;
+        else return false;
+      });
+      console.log(this.editArray);
+    },
+    newReplay(newReplay) {
+      this.$emit("addReplay", newReplay);
+    },
+    deleteReplay(comment_id, replay_id, index) {
+      this.$emit("deleteReplay", comment_id, replay_id, index);
+    },
+    updateComment(comment_id, text) {
+      this.editArray = this.comments.map((ele) => {
+        return false;
+      });
+      this.$emit("updateComment", comment_id, text);
+    },
+    updateReplay(replay_id, text) {
+      this.$emit("updateReplay", replay_id, text);
+    },
+  },
+  created() {
+    this.editArray = this.comments.map((ele) => {
+      return false;
+    });
   },
 };
 </script>
@@ -121,9 +186,17 @@ p {
   height: auto;
 }
 
+.all {
+  width: 90%;
+  margin: 3% auto;
+  padding-bottom: 25px;
+  border-bottom: 1px solid gray;
+}
+
 .v-list {
-  height: 400px;
+  height: 600px;
   overflow-y: auto;
+  padding: 20px 0;
 }
 
 .comment {
@@ -132,10 +205,9 @@ p {
   display: flex;
   justify-content: space-between;
   padding: 15px;
-  width: 90%;
-  margin: 5% auto;
-  box-shadow: 0px 3px 1px -2px rgb(0 0 0 / 20%),
-    0px 2px 2px 0px rgb(0 0 0 / 14%), 0px 1px 5px 0px rgb(0 0 0 / 12%);
+  
+  /* box-shadow: 0px 3px 1px -2px rgb(0 0 0 / 20%),
+    0px 2px 2px 0px rgb(0 0 0 / 14%), 0px 1px 5px 0px rgb(0 0 0 / 12%); */
 }
 
 .comment .img {
