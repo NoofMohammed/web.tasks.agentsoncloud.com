@@ -2,7 +2,7 @@ import colors from "vuetify/es5/util/colors";
 
 export default {
   // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
-  //release_0
+  //release_1
   ssr: true,
   server: {
     port: 30121, // default: 3000
