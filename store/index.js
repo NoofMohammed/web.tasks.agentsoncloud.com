@@ -2,8 +2,8 @@ import axios from "axios";
 
 // holds your root state
 export const state = () => ({
-  userID: 1,
-  username: "firas diab",
+  userID: "user_id 1",
+  username: "user_name 1 ",
   fixTasks: [],
   fixSearchTasks: [],
   tasks: [],
@@ -249,7 +249,6 @@ export const mutations = {
     console.log({ subject, creator, priority, workStatus });
     if (subject && creator && priority && workStatus) {
       // ---------------------- 1 --------------------------------- //
-      console.log("all");
       const arr = state.fixSearchTasks.filter((element) => {
         return (
           element.subject.toLowerCase().includes(subject.toLowerCase()) &&
@@ -263,7 +262,6 @@ export const mutations = {
       // ----------------------------------------------------------------- //
     } else if (subject && creator && priority) {
       // ---------------------- 3-1 --------------------------------- //
-      console.log("all");
       const arr = state.fixSearchTasks.filter((element) => {
         return (
           element.subject.toLowerCase().includes(subject.toLowerCase()) &&
@@ -276,7 +274,6 @@ export const mutations = {
       // ----------------------------------------------------------------- //
     } else if (creator && priority && workStatus) {
       // ---------------------- 3-2 --------------------------------- //
-      console.log("all");
       const arr = state.fixSearchTasks.filter((element) => {
         return (
           element.creator_name.toLowerCase().includes(creator.toLowerCase()) &&
@@ -289,7 +286,6 @@ export const mutations = {
       // ----------------------------------------------------------------- //
     } else if (subject && priority && workStatus) {
       // ---------------------- 3-3 --------------------------------- //
-      console.log("all");
       const arr = state.fixSearchTasks.filter((element) => {
         return (
           element.subject.toLowerCase().includes(subject.toLowerCase()) &&
@@ -302,7 +298,6 @@ export const mutations = {
       // ----------------------------------------------------------------- //
     } else if (subject && creator && workStatus) {
       // ---------------------- 3-4 --------------------------------- //
-      console.log("all");
       const arr = state.fixSearchTasks.filter((element) => {
         return (
           element.subject.toLowerCase().includes(subject.toLowerCase()) &&
@@ -315,7 +310,6 @@ export const mutations = {
       // ----------------------------------------------------------------- //
     } else if (subject && creator) {
       // ---------------------- 3-1 --------------------------------- //
-      console.log("all");
       const arr = state.fixSearchTasks.filter((element) => {
         return (
           element.subject.toLowerCase().includes(subject.toLowerCase()) &&
@@ -327,7 +321,6 @@ export const mutations = {
       // ----------------------------------------------------------------- //
     } else if (subject && priority) {
       // ---------------------- 3-2 --------------------------------- //
-      console.log("all");
       const arr = state.fixSearchTasks.filter((element) => {
         return (
           element.subject.toLowerCase().includes(subject.toLowerCase()) &&
@@ -339,7 +332,6 @@ export const mutations = {
       // ----------------------------------------------------------------- //
     } else if (subject && workStatus) {
       // ---------------------- 3-3 --------------------------------- //
-      console.log("all");
       const arr = state.fixSearchTasks.filter((element) => {
         return (
           element.subject.toLowerCase().includes(subject.toLowerCase()) &&
@@ -351,7 +343,6 @@ export const mutations = {
       // ----------------------------------------------------------------- //
     } else if (creator && priority) {
       // ---------------------- 3-4 --------------------------------- //
-      console.log("all");
       const arr = state.fixSearchTasks.filter((element) => {
         return (
           element.creator_name.toLowerCase().includes(creator.toLowerCase()) &&
@@ -363,7 +354,6 @@ export const mutations = {
       // ----------------------------------------------------------------- //
     } else if (creator && workStatus) {
       // ---------------------- 3-5 --------------------------------- //
-      console.log("all");
       const arr = state.fixSearchTasks.filter((element) => {
         return (
           element.creator_name.toLowerCase().includes(creator.toLowerCase()) &&
@@ -375,7 +365,6 @@ export const mutations = {
       // ----------------------------------------------------------------- //
     } else if (priority && workStatus) {
       // ---------------------- 3-6 --------------------------------- //
-      console.log("all");
       const arr = state.fixSearchTasks.filter((element) => {
         return (
           element.priority === priority &&
@@ -387,7 +376,6 @@ export const mutations = {
       // ----------------------------------------------------------------- //
     } else if (subject) {
       // ---------------------- 1 fliter --------------------------------- //
-      console.log("subject");
       const arr = state.fixSearchTasks.filter((element) => {
         return element.subject.toLowerCase().includes(subject.toLowerCase());
       });
@@ -395,7 +383,6 @@ export const mutations = {
       // ----------------------------------------------------------------- //
     } else if (creator) {
       // ---------------------- 1 fliter --------------------------------- //
-      console.log("creator");
       const arr = state.fixSearchTasks.filter((element) => {
         return element.creator_name
           .toLowerCase()
@@ -406,7 +393,6 @@ export const mutations = {
       // ----------------------------------------------------------------- //
     } else if (priority) {
       // ---------------------- 1 fliter --------------------------------- //
-      console.log("priority");
       const arr = state.fixSearchTasks.filter((element) => {
         return element.priority === priority;
       });
@@ -414,7 +400,6 @@ export const mutations = {
       // ----------------------------------------------------------------- //
     } else if (workStatus) {
       // ---------------------- 1 --------------------------------- //
-      console.log("all");
       const arr = state.fixSearchTasks.filter((element) => {
         console.log(element.status.toLowerCase() , workStatus);
         return element.status.toLowerCase() === workStatus.toLowerCase();

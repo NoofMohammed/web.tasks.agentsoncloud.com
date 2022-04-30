@@ -1,6 +1,5 @@
 <template>
   <div>
-    
     <div>
       <div class="tasksM animate__animated animate__rotateIn">
         <v-btn color="warning" dark @click="goToTasksTables">
@@ -12,7 +11,6 @@
 </template>
 
 <script>
-import axios from "axios";
 export default {
   name: "LandingPage",
   methods: {

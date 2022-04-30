@@ -1,7 +1,6 @@
 <template>
   <div>
-    <v-btn color="indigo" dark @click="showCreateTask"> + Create Task </v-btn>
-    <v-dialog v-model="CreateTaskDialog" width="1200">
+    <v-dialog v-model="CreateTaskDialog" width="1200" persistent>
       <v-card>
         <v-card-title class="text-h5 grey lighten-2 popupText">
           Create New Task
@@ -87,7 +86,7 @@
                 class="chickbox"
               ></v-checkbox>
               <button class="selectAll" @click="selectAll">select all</button>
-              <v-combobox
+              <!-- <v-combobox
                 v-model="chips"
                 :items="users"
                 item-value="user_id"
@@ -110,7 +109,42 @@
                     <strong>{{ item.user_name }}</strong>
                   </v-chip>
                 </template>
-              </v-combobox>
+              </v-combobox> -->
+              <v-autocomplete
+                v-model="chip"
+                :items="users"
+                item-value="user_id"
+                item-text="user_name"
+                multiple
+                chip
+                clearable
+                class="assingee"
+                flat
+                hide-no-data
+                hide-details
+                background-color="#FAFAFA"
+                label="Enter Nmae"
+                solo
+                prepend-icon="mdi-filter-variant"
+                @change="chageChips"
+              >
+                <template v-slot:selection="{ item, index }">
+                  <v-chip
+                    v-if="index === 0 || index === 1"
+                    @click:close="remove(item)"
+                    close
+                    class="ma-2 testP"
+                    color="primary"
+                    label
+                  >
+                    <v-icon left> mdi-account-circle-outline </v-icon>
+                    <span>{{ item.user_name }} </span>
+                  </v-chip>
+                  <span v-if="index === 2" class="black--text text-caption">
+                    (+{{ chips.length - 2 }} others)
+                  </span>
+                </template>
+              </v-autocomplete>
             </div>
             <div v-if="dateToggle">
               <DatePicker :startDay="created_date" @closeDate="closeDate" />
@@ -322,7 +356,7 @@
               <p>Estimated Time For Task :</p>
               <div class="deadLineEstimatedTime">
                 <div>
-                  <v-text-field
+                  <!-- <v-text-field
                     v-model="estimated_time"
                     :rules="[
                       () => !!estimated_time || 'This field is required',
@@ -330,7 +364,15 @@
                     :error-messages="errorEstimatedMessages"
                     @input="errorEstimatedMessages = ''"
                     label="HH : MM"
-                  ></v-text-field>
+                  ></v-text-field> -->
+                  <VueTimepicker
+                    v-model="estimated_time"
+                    @change="handleEstimatedTime"
+                    :error-messages="errorEstimatedMessages"
+                  />
+                  <p v-if="errorEstimatedMessages" class="errorMsg">
+                    {{ errorEstimatedMessages }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -338,9 +380,7 @@
         </div>
         <v-divider></v-divider>
         <v-card-actions class="v-card-action">
-          <v-btn color="error" text @click="CreateTaskDialog = false">
-            Cancel
-          </v-btn>
+          <v-btn color="error" text @click="closeDialog"> Cancel </v-btn>
           <v-spacer></v-spacer>
           <v-btn color="primary" text @click="createNewTask"> Create</v-btn>
         </v-card-actions>
@@ -353,18 +393,21 @@
 import axios from "axios";
 import DatePicker from "./DatePicker.vue";
 import TimePicker from "./TimePicker.vue";
+import AddedMessage from "./AddedMessage.vue";
 import Swal from "sweetalert2";
+import VueTimepicker from "vue2-timepicker/src/vue-timepicker.vue";
 export default {
   name: "CreateTask",
   data() {
     return {
-      CreateTaskDialog: false,
+      // CreateTaskDialog: false,
       type: 1,
       dateToggle: false,
       dateToggle2: false,
       timeToggle: false,
       cretedTimeToggle: false,
       chips: [],
+      chip: [],
       users: [],
       subject: "",
       description: "",
@@ -393,15 +436,38 @@ export default {
   components: {
     DatePicker,
     TimePicker,
+    AddedMessage,
+    VueTimepicker,
+  },
+  props: {
+    CreateTaskDialog: Boolean,
   },
   methods: {
+    closeDialog() {
+      this.$emit("closeDialog");
+    },
     async getAllUsers() {
       const users = await axios.get("/ecm/users/users");
       this.users = users.data;
       console.log("users", users.data);
     },
     showCreateTask() {
-      this.CreateTaskDialog = true;
+      this.type = 1;
+      this.dateToggle = false;
+      this.timeToggle = false;
+      this.chips = [];
+      this.subject = "";
+      this.description = "";
+      this.status = "created";
+      this.priority = 3;
+      this.created_date = "";
+      this.created_time = "";
+      this.due_date = "";
+      this.due_time = "";
+      this.estimated_time = "";
+      this.creator = "";
+      this.creator_name = "";
+      this.claimed = true;
     },
     remove(item) {
       this.chips.splice(this.chips.indexOf(item), 1);
@@ -431,6 +497,33 @@ export default {
       this.cretedTimeToggle = false;
       this.created_time = time;
       this.errorcreated_timeMessages = "";
+    },
+    chageChips() {
+      const arr = [];
+      this.chip.forEach((ele) => {
+        const user = this.users.find((el) => {
+          return el.user_id === ele;
+        });
+        arr.push(user);
+        this.chips = arr;
+      });
+    },
+    handleEstimatedTime() {
+      console.log(this.estimated_time);
+      console.log(
+        this.estimated_time.includes("mm") ||
+          this.estimated_time.includes("HH") ||
+          !this.estimated_time
+      );
+      if (
+        this.estimated_time.includes("mm") ||
+        this.estimated_time.includes("HH") ||
+        !this.estimated_time
+      ) {
+        this.errorEstimatedMessages = "This field is required";
+        return;
+      }
+      this.errorEstimatedMessages = "";
     },
     async createNewTask() {
       let chickVald = true;
@@ -478,8 +571,12 @@ export default {
         )
           .toISOString()
           .substr(0, 10);
-        let hour = today.getHours();
-        let min = today.getMinutes();
+        let hour =
+          today.getHours() + "".length == 1
+            ? "0" + today.getHours()
+            : today.getHours() + "";
+        let min = today.getMinutes() + "";
+
         this.created_time = hour + ":" + min;
         // if (hour < 10) {
         //   hour = "0" + hour;
@@ -521,7 +618,6 @@ export default {
         attachment: "",
         refrenced: "",
       };
-      console.log(newTask, " newTask ");
       if (this.type === 2 && this.selectRecurrence === "daily") {
         console.log("sended");
         await this.$axios.post("/tasks-management/tasks/freq", {
@@ -530,38 +626,17 @@ export default {
           chips: this.chips,
           selectedDays: this.selectedDays,
         });
-        this.CreateTaskDialog = false;
-        Swal.fire({
-          position: "center",
-          icon: "success",
-          title: "Your work has been saved",
-          showConfirmButton: false,
-          timer: 1500,
-        });
-        setTimeout(() => {
-          this.CreateTaskDialog = false;
-          this.type = 1;
-          this.dateToggle = false;
-          this.timeToggle = false;
-          this.chips = [];
-          this.subject = "";
-          this.description = "";
-          this.status = "created";
-          this.priority = 3;
-          this.created_date = "";
-          this.created_time = "";
-          this.due_date = "";
-          this.due_time = "";
-          this.estimated_time = "";
-          this.creator = "";
-          this.creator_name = "";
-          this.claimed = false;
-          this.$emit("getCreated");
-        }, 1600);
+        this.$emit("getCreated");
+        this.$emit("closeDialog");
+        this.$emit("openCreatedMSG");
+        this.$emit("taskName", newTask.subject);
         return;
       }
 
       if (!this.claimed) {
+        if (this.chips.length === 0) {
+          return alert("mamoun is bitch");
+        }
         const users_id = [];
         this.chips.forEach((element) => {
           users_id.push({ id: element.user_id, name: element.user_name });
@@ -576,35 +651,10 @@ export default {
             { task_id: res.data.task_id, user_id: [ele] }
           );
         });
-        this.CreateTaskDialog = false;
-        Swal.fire({
-          position: "center",
-          icon: "success",
-          title: "Your work has been saved",
-          showConfirmButton: false,
-          timer: 1500,
-        });
-        setTimeout(() => {
-          this.CreateTaskDialog = false;
-          this.type = 1;
-          this.dateToggle = false;
-          this.timeToggle = false;
-          this.chips = [];
-          this.subject = "";
-          this.description = "";
-          this.status = "created";
-          this.priority = 3;
-          this.created_date = "";
-          this.created_time = "";
-          this.due_date = "";
-          this.due_time = "";
-          this.estimated_time = "";
-          this.creator = "";
-          this.creator_name = "";
-          this.claimed = true;
-          this.errorSubjectMessages = "";
-          this.$emit("getCreated");
-        }, 1600);
+        this.$emit("getCreated");
+        this.$emit("closeDialog");
+        this.$emit("openCreatedMSG");
+        this.$emit("taskName", newTask.subject);
       } else {
         const users_id = [];
         this.chips.forEach((element) => {
@@ -619,41 +669,26 @@ export default {
           { task_id: res.data.task_id, user_id: users_id }
         );
         if (res.status === 201) {
-          this.CreateTaskDialog = false;
-          Swal.fire({
-            position: "center",
-            icon: "success",
-            title: "Your work has been saved",
-            showConfirmButton: false,
-            timer: 1500,
-          });
-          setTimeout(() => {
-            this.CreateTaskDialog = false;
-            this.type = 1;
-            this.dateToggle = false;
-            this.timeToggle = false;
-            this.chips = [];
-            this.subject = "";
-            this.description = "";
-            this.status = "created";
-            this.priority = 3;
-            this.created_date = "";
-            this.created_time = "";
-            this.due_date = "";
-            this.due_time = "";
-            this.estimated_time = "";
-            this.creator = "";
-            this.creator_name = "";
-            this.claimed = true;
-            this.errorSubjectMessages = "";
-            this.$router.push({ path: `/task/created/${res.data.task_id}` });
-          }, 1600);
+          // Swal.fire({
+          //   position: "center",
+          //   icon: "success",
+          //   title: "Your work has been saved",
+          //   showConfirmButton: false,
+          //   timer: 1500,
+          // });
+          this.$emit("getCreated");
+          this.$emit("closeDialog");
+          this.$emit("openCreatedMSG");
+          this.$emit("taskName", newTask.subject);
         }
       }
     },
     selectAll() {
       // Copy all v-select's items in your selectedItem array
       this.chips = [...this.users];
+      this.chip = this.users.map((ele) => {
+        return ele.user_id;
+      });
     },
     selectDays() {
       if (this.days) {
@@ -671,6 +706,26 @@ export default {
           return element;
         }
       });
+    },
+    endCreate() {
+      this.type = 1;
+      this.dateToggle = false;
+      this.timeToggle = false;
+      this.chips = [];
+      this.subject = "";
+      this.description = "";
+      this.status = "created";
+      this.priority = 3;
+      this.created_date = "";
+      this.created_time = "";
+      this.due_date = "";
+      this.due_time = "";
+      this.estimated_time = "";
+      this.creator = "";
+      this.creator_name = "";
+      this.claimed = true;
+      this.errorSubjectMessages = "";
+      // this.$router.push({ path: `/task/created/${res.data.task_id}` });
     },
   },
   created() {
@@ -845,7 +900,7 @@ p {
 }
 
 .deadLineEstimatedTime {
-  width: 30%;
+  width: max-content;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -896,5 +951,18 @@ p {
 
 .req-creation div {
   width: 70%;
+}
+
+.testP {
+  padding: 10px;
+}
+
+.errorMsg {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #ff5252 !important;
+  width: 100%;
+  padding-top: 5px;
+  border-top: 1px solid #ff5252;
 }
 </style>

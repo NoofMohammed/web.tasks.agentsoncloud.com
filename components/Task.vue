@@ -1,6 +1,6 @@
 <template>
   <div v-if="loading" class="not-loading">
-    <nuxt-link class="link" to="/tasksTables">Task Managment</nuxt-link>
+    <!-- <nuxt-link class="link" to="/tasksTables">Task Managment</nuxt-link> -->
     <div class="container" v-if="task">
       <div class="headers">
         <div class="title">
@@ -23,6 +23,7 @@
               :assignedUsers="assignedUsers"
               v-if="task.creator === $store.state.userID"
               @newTask="newTask"
+              @closeDialog="closeDialog"
             />
           </div>
           <div>
@@ -144,7 +145,7 @@
         leave-active-class="animate__animated animate__fadeOutUp"
       >
         <div v-if="tab === 'comment'">
-          <Comments2
+          <!-- <Comments
             :comments="comments"
             :task_id="id"
             :taskCreator="task.creator"
@@ -154,6 +155,13 @@
             @deleteReplay="deleteReplay"
             @updateComment="updateComment"
             @updateReplay="updateReplay"
+          /> -->
+          <Comments
+            :id="id"
+            type="task"
+            :taskCreator="task.creator + ''"
+            :userId="$store.state.userID + ''"
+            :userName="$store.state.username"
           />
           <!-- <div class="addComment-btn" v-if="!showAddCommentToggle">
             <v-btn @click="showAddCommentToggle = true" color="primary" dark>
@@ -189,7 +197,7 @@
         </div>
       </transition>
     </div>
-    <v-dialog v-model="deleteDialog" width="500">
+    <!-- <v-dialog v-model="deleteDialog" width="500">
       <v-card>
         <v-card-title class="text-h5 grey lighten-2 popupText">
           Are You Sure
@@ -207,7 +215,7 @@
           <v-btn color="primary" text @click="deleteTask"> delete</v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
     <v-dialog v-model="claimToggle" width="500">
       <v-card>
         <v-card-title class="text-h5 grey lighten-2 popupText">
@@ -244,6 +252,27 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <div v-if="deleteDialog">
+      <div class="overlay__content">
+        <div class="header-msg">
+          <h3>Delete Task</h3>
+          <v-icon class="icon">mdi-delete-forever</v-icon>
+        </div>
+        <div class="header-msg">
+          <p>
+            You are sure you want to delete<br />
+            This Task, {{task.subject}}?
+          </p>
+          <div>
+            <button class="btn-cancel" @click="deleteDialog = false">
+              Cancel
+            </button>
+            <button class="btn-delete" @click="deleteTask">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div class="overlay"></div>
+    </div>
   </div>
   <div v-else class="loading">
     <div></div>
@@ -257,6 +286,7 @@
 <script>
 import UpdateTask from "./UpdateTask.vue";
 import Comments2 from "./Comments2.vue";
+import Comments from "./Comments.vue";
 import Logs from "./Logs.vue";
 import Swal from "sweetalert2";
 import "animate.css";
@@ -295,13 +325,11 @@ export default {
 
   methods: {
     async getData() {
-      [this.task, this.comments, this.assignedUsers, this.taskLogs] =
-        await Promise.all([
-          this.getTaskInfo(),
-          this.getTaskComments(),
-          this.getAssignUsers(),
-          this.getTaskLogs(),
-        ]);
+      [this.task, this.assignedUsers, this.taskLogs] = await Promise.all([
+        this.getTaskInfo(),
+        this.getAssignUsers(),
+        this.getTaskLogs(),
+      ]);
     },
     async getTaskInfo() {
       const res = await this.$axios.get(
@@ -320,7 +348,7 @@ export default {
       const res = await this.$axios.get(
         `/tasks-management/tasks/task/assign/${this.id}`
       );
-      console.log(res.data, "user_name");
+      console.log(res.data, " this.assignedUsers  dgdgdg");
       return res.data;
     },
     async getTaskLogs() {
@@ -359,9 +387,6 @@ export default {
       // })
     },
     addReplay(newReplay) {
-      console.log("need to add replay");
-      console.log(this.comments, "before");
-      console.log(newReplay, "newReplay");
       this.comments = this.comments.map((ele) => {
         if (ele.comment.comment_id === newReplay.comment_id) {
           return { ...ele, replays: [...ele.replays, newReplay] };
@@ -410,11 +435,8 @@ export default {
       }
     },
     async deleteTask() {
-      const res = await this.$axios.delete(
-        `/tasks-management/tasks/deleteTask/${this.task.task_id}`
-      );
-      console.log(res.status, "status");
-      if (res.status === 200) {
+      this.$store.dispatch("deleteTask", this.task.task_id);
+      if (true) {
         Swal.fire({
           position: "center",
           icon: "success",
@@ -423,7 +445,7 @@ export default {
           timer: 1500,
         });
         setTimeout(() => {
-          this.$router.push({ path: `/tasksTables` });
+          this.$emit("closeFullView");
         }, 1600);
       }
     },
@@ -452,8 +474,12 @@ export default {
       this.assignedUsers = res.data;
       this.taskLogs = await this.getTaskLogs();
     },
+    closeDialog() {
+      this.getData();
+      this.$emit("getCreated");
+    },
   },
-  created() {
+  mounted() {
     this.getData();
   },
 };
@@ -484,12 +510,13 @@ p {
 }
 
 .container {
-  width: 85%;
+  /* width: 85%;
   margin: 50px auto;
   min-height: 80vh;
   padding: 20px;
   border-radius: 5px;
-  box-shadow: 5px 5px 5px 5px #000000;
+  box-shadow: 5px 5px 5px 5px #000000; */
+  padding: 30px 10px;
 }
 
 .headers {
@@ -615,6 +642,56 @@ p {
 
 .delete-message {
   margin-top: 20px;
+}
+
+.header-msg {
+  display: flex;
+  justify-content: space-between;
+  align-items: center !important;
+}
+p {
+  color: rgb(0 0 0 / 55%);
+}
+.btn-delete {
+  color: #22619e;
+  cursor: pointer;
+  margin-top: 10px;
+  margin-right: 10px;
+  font-weight: bold;
+}
+.btn-cancel {
+  color: rgb(0 0 0 / 55%);
+  cursor: pointer;
+  margin-top: 10px;
+  margin-right: 10px;
+  font-weight: bold;
+}
+.icon {
+  color: red;
+  font-size: 50px;
+  margin-right: 50px;
+}
+body {
+  height: 100vh;
+  position: relative;
+}
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(23, 25, 28, 0.7);
+}
+.overlay__content {
+  background-color: #fff;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  width: 40%;
+  padding: 2em 1em 1.5em;
+  font-size: 1.2em;
+  border-radius: 0.3em;
+  box-shadow: 6px 6px 10px rgba(0, 0, 0, 0.3);
 }
 
 /* -------------------------------------------------------------------------------------*/

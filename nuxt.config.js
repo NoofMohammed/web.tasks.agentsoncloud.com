@@ -2,6 +2,7 @@ import colors from "vuetify/es5/util/colors";
 
 export default {
   // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
+  //release_0
   ssr: true,
   server: {
     port: 30121, // default: 3000
@@ -89,6 +90,10 @@ export default {
     "/ecm/": {
       target: "https://62207663ce99a7de195a41c3.mockapi.io/",
       pathRewrite: { "^/ecm/": "" },
+    },
+    "/comments/": {
+      target: "http://localhost:30122/",
+      pathRewrite: { "^/comments/": "" },
     },
   },
 

@@ -5,7 +5,6 @@
       leave-active-class="animate__animated animate__fadeOutUp"
     >
       <div v-if="inimation" class="container">
-        <TaskDraior />
         <div class="Main-Filter">
           <v-row>
             <v-col cols="12" sm="2">
@@ -59,22 +58,52 @@
         </div>
         <div class="table" v-if="assigned || general || created || deleted">
           <div class="search">
-            <div class="search-l">
+            <div class="search-inputs">
               <div class="search-input">
                 <v-text-field
                   label="Task Name"
                   v-model="searchText"
-                  solo
                 ></v-text-field>
               </div>
-              <div class="search-icon">
+              <div class="search-input">
+                <v-text-field
+                  label="Creator name"
+                  v-model="creatorText"
+                ></v-text-field>
+              </div>
+              <div class="search-input">
+                <v-select
+                  :items="workStatus"
+                  v-model="selctedWorkStatus"
+                  label="Select Work status"
+                ></v-select>
+              </div>
+              <div class="search-input">
+                <v-select
+                  :items="priority"
+                  v-model="selctedPriority"
+                  label="Select priority"
+                ></v-select>
+              </div>
+              <div class="search-icon search-input">
                 <v-icon large @click="search" color="indigo"
                   >mdi-magnify</v-icon
                 >
               </div>
             </div>
             <div class="creteTask">
-              <CreateTask @getCreated="changeTabs('created')" />
+              <v-btn color="#2A416A" dark @click="showCreateTask">
+                + Create Task
+              </v-btn>
+              <div v-if="CreateTaskDialog">
+                <CreateTask
+                  @getCreated="changeTabs('created')"
+                  :CreateTaskDialog="CreateTaskDialog"
+                  @closeDialog="closeDialog"
+                  @openCreatedMSG="showAddedMsg = true"
+                  @taskName="taskName"
+                />
+              </div>
             </div>
           </div>
           <v-data-table
@@ -293,6 +322,21 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+        <div v-if="taskFullView">
+          <TaskFull
+            :taskId="taskId"
+            :type="type"
+            :taskFullView="taskFullView"
+            @closeFullView="closeFullView"
+            @getCreated="changeTabs('created')"
+          />
+        </div>
+        <div v-if="showAddedMsg">
+          <AddedMessage
+            :taskName="newTaskName"
+            @endCreate="showAddedMsg = false"
+          />
+        </div>
       </div>
     </transition>
   </div>
@@ -302,10 +346,17 @@
 import CreateTask from "./CreateTask.vue";
 import FilterForm from "./Search.vue";
 import TaskDraior from "./TaskDraios.vue";
+import TaskFull from "./TaskFull.vue";
 import Swal from "sweetalert2";
 import "animate.css";
 export default {
   name: "TasksTables",
+  components: {
+    CreateTask,
+    FilterForm,
+    TaskDraior,
+    TaskFull,
+  },
   data() {
     return {
       headers: [
@@ -314,14 +365,14 @@ export default {
           sortable: false,
           value: "subject",
           width: "220px",
-          class: "indigo white--text title pt-3 pb-3",
+          class: "teal white--text title pt-3 pb-3",
           // align: "center",
         },
         {
           text: "By Who",
           value: "creator_name",
           sortable: false,
-          class: "indigo white--text title",
+          class: "teal white--text title",
           align: "center",
         },
 
@@ -329,49 +380,49 @@ export default {
           text: "Work Status",
           value: "status",
           sortable: false,
-          class: "indigo white--text title",
+          class: "teal white--text title",
           align: "center",
         },
         {
           text: "Created Date And Time",
           value: "created",
           sortable: true,
-          class: "indigo white--text title",
+          class: "teal white--text title",
           align: "center",
         },
         {
           text: "Deadline",
           value: "deadline",
           sortable: false,
-          class: "indigo white--text title",
+          class: "teal white--text title",
           align: "center",
         },
         {
           text: "Priority",
           value: "priority",
           sortable: false,
-          class: "indigo white--text title",
+          class: "teal white--text title",
           align: "center",
         },
         {
           text: "Refreced",
           value: "refreced",
           sortable: false,
-          class: "indigo white--text title",
+          class: "teal white--text title",
           align: "center",
         },
         {
           text: "Activity Status",
           value: "work_status",
           sortable: false,
-          class: "indigo white--text title",
+          class: "teal white--text title",
           align: "center",
         },
         {
           text: "Actions",
           value: "actions",
           sortable: false,
-          class: "indigo white--text title",
+          class: "teal white--text title",
           align: "center",
         },
       ],
@@ -394,16 +445,32 @@ export default {
       users: [],
       inimation: false,
       categorys: ["All", "today", "tomorrow", "this week", "last week"],
-      selectCategoryname: null,
+      selectCategoryname: "All",
+      taskId: "",
+      type: "",
+      taskFullView: false,
       searchText: "",
+      creatorText: "",
+      showPriority: false,
+      priority: ["All", "High", "Meduim", "Low"],
+      selctedPriority: "All",
+      workStatus: ["All", "New", "on hold", "progress", "completed"],
+      showWorkStatus: false,
+      selctedWorkStatus: "All",
+      CreateTaskDialog: false,
+      showAddedMsg: false,
+      newTaskName: "",
     };
   },
-  components: {
-    CreateTask,
-    FilterForm,
-    TaskDraior,
-  },
+
   methods: {
+    showCreateTask() {
+      console.log("hi");
+      this.CreateTaskDialog = true;
+    },
+    closeDialog() {
+      this.CreateTaskDialog = false;
+    },
     rowClick: function (item, row) {
       row.select(true);
       //item.name - selected id
@@ -414,12 +481,29 @@ export default {
       else if (priority === 3) return "#4CAF50  ";
     },
     goTask(task) {
+      this.taskFullView = false;
+      const type = this.assigned
+        ? "assigned"
+        : this.general
+        ? "genelar"
+        : "created";
+      this.taskId = task.task_id;
+      this.type = type;
+      this.taskFullView = true;
+      // this.$router.push({ path: `/task/${type}/${task.task_id}` });
+    },
+    goTaskPage(task) {
       const type = this.assigned
         ? "assigned"
         : this.general
         ? "genelar"
         : "created";
       this.$router.push({ path: `/task/${type}/${task.task_id}` });
+    },
+    closeFullView() {
+      this.taskId = "";
+      this.type = "";
+      this.taskFullView = false;
     },
     editItem(item) {
       this.co = false;
@@ -565,7 +649,7 @@ export default {
               text: "Assignned To",
               value: "actions2",
               sortable: false,
-              class: "indigo white--text title",
+              class: "teal white--text title",
               align: "center",
             });
           break;
@@ -583,7 +667,7 @@ export default {
               text: "Assignned To",
               value: "actions2",
               sortable: false,
-              class: "indigo white--text title",
+              class: "teal white--text title",
               align: "center",
             });
           break;
@@ -604,7 +688,7 @@ export default {
       this.searchText = "";
       if (this.selectCategoryname === "today") {
         this.$store.commit("setTodayTasks");
-      } else if (this.selectCategoryname === "None") {
+      } else if (this.selectCategoryname === "All") {
         this.$store.commit("setAllTasks");
       } else if (this.selectCategoryname === "last week") {
         this.$store.commit("setLastWeekTasks");
@@ -613,6 +697,27 @@ export default {
       } else if (this.selectCategoryname === "tomorrow") {
         this.$store.commit("setTomorrowTasks");
       }
+    },
+    search() {
+      let priority =
+        this.selctedPriority === "High"
+          ? 1
+          : this.selctedPriority === "Meduim"
+          ? 2
+          : this.selctedPriority === "Low"
+          ? 3
+          : 0;
+      let work = this.selctedWorkStatus;
+      if (work === "All") {
+        work = 0;
+      }
+
+      this.$store.commit("searchAll", {
+        subject: this.searchText,
+        creator: this.creatorText,
+        priority,
+        workStatus: work,
+      });
     },
     changeCo() {
       this.co = !this.co;
@@ -748,15 +853,9 @@ export default {
     async assignedAgain() {
       console.log("hello gays");
     },
-    search() {
-      console.log(this.searchText);
-      this.$store.commit("search", this.searchText);
-      //this.searchText = ""
+    taskName(newName) {
+      this.newTaskName = newName;
     },
-    // showCreateTask (){
-    //   this.$store.commit("setCreateTaskDialog", true);
-    //   console.log("clicked");
-    // },
   },
   created() {
     this.getAssignedTaskas();
@@ -778,7 +877,7 @@ export default {
 } */
 .fffffffff {
   font-size: 18px !important;
-  color: black;
+  color: #2a416a;
   width: 300px;
   height: auto;
   cursor: pointer;
@@ -794,7 +893,7 @@ export default {
   justify-content: space-between;
   align-items: center;
 }
-.search-l {
+/* .search-l {
   width: 100%;
   display: flex;
 }
@@ -802,6 +901,17 @@ export default {
 .search-input {
   width: 23%;
   height: 50px;
+} */
+
+.search-inputs {
+  width: 90%;
+  margin: 0 auto;
+  display: flex;
+  gap: 20px;
+}
+
+.search-input {
+  width: 15%;
 }
 
 .search-icon {
@@ -846,21 +956,22 @@ export default {
 }
 
 .tab-button {
-  background: #e0e0e0;
+  background: white;
   color: black;
   padding: 15px 10px;
   width: 200px;
   text-align: center;
-  border-radius: 25px;
+  border-radius: 15px;
 }
 
 .assigned,
 .general,
 .created,
 .deleted {
-  background-color: #1867c0;
+  background-color: #9ec2b6;
   color: white;
-  border-radius: 10px;
+  border-radius: 15px;
+  border: 1px solid #9ec2b6;
 }
 
 .select-categorys {
@@ -885,7 +996,7 @@ h3 {
   padding: 25px;
   /* background-color: #2666CF; */
   border-radius: 10px;
-  background-color: #0392ce;
+  background-color: #009688;
 }
 .btn-search {
   background-color: #fff;

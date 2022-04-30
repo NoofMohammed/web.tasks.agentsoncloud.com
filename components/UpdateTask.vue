@@ -4,7 +4,7 @@
     <v-dialog v-model="CreateTaskDialog" width="1200">
       <v-card>
         <v-card-title class="text-h5 grey lighten-2 popupText">
-          Create New Task
+          Update Your Task
         </v-card-title>
         <div class="container">
           <div class="l-div">
@@ -16,6 +16,7 @@
               maxlength="40"
               hint="This field uses maxlength attribute"
               label="Task Subject"
+              @input="chickChanges"
             ></v-text-field>
             <p class="description-p">Task Description :</p>
             <v-textarea
@@ -25,6 +26,7 @@
               :rules="rules2"
               counter="400"
               label="Task Description"
+              @input="chickChanges"
             >
               <template>
                 <div>Bio <small>(optional)</small></div>
@@ -46,21 +48,21 @@
               <div class="priority-selcted">
                 <div
                   class="selcted"
-                  @click="priority = 3"
+                  @click="changePriority(3)"
                   v-bind:class="{ active: priority === 3 }"
                 >
                   <p>Low</p>
                 </div>
                 <div
                   class="selcted"
-                  @click="priority = 2"
+                  @click="changePriority(2)"
                   v-bind:class="{ active: priority === 2 }"
                 >
                   <p>Meduim</p>
                 </div>
                 <div
                   class="selcted"
-                  @click="priority = 1"
+                  @click="changePriority(1)"
                   v-bind:class="{ active: priority === 1 }"
                 >
                   <p>High</p>
@@ -71,13 +73,15 @@
           <div class="r-div">
             <div class="assingee-div">
               <v-checkbox
+                :disabled="true"
                 v-model="claimed"
                 label="Claimed"
                 color="info"
                 class="chickbox"
+                @change="chickChanges"
               ></v-checkbox>
-              <button class="selectAll" @click="selectAll">select all</button>
-              <v-combobox
+              <!-- <button class="selectAll" @click="selectAll">select all</button> -->
+              <!-- <v-combobox
                 v-model="chips"
                 :items="users"
                 item-value="user_id"
@@ -86,8 +90,10 @@
                 clearable
                 label="Enter Nmae"
                 multiple
+                background-color="white"
                 prepend-icon="mdi-filter-variant"
                 class="assingee"
+                @change="chickChanges"
               >
                 <template v-slot:selection="{ attrs, item, select, selected }">
                   <v-chip
@@ -100,29 +106,43 @@
                     <strong>{{ item.user_name }}</strong>
                   </v-chip>
                 </template>
-              </v-combobox>
+              </v-combobox> -->
+              <v-autocomplete
+                v-model="chip"
+                :items="users"
+                item-value="user_id"
+                item-text="user_name"
+                multiple
+                chip
+                clearable
+                class="assingee"
+                flat
+                hide-no-data
+                hide-details
+                background-color="#FAFAFA"
+                label="Enter Nmae"
+                solo
+                prepend-icon="mdi-filter-variant"
+                @change="chageChips"
+              >
+                <template v-slot:selection="{ item, index }">
+                  <v-chip
+                    v-if="index === 0 || index === 1"
+                    @click:close="remove(item)"
+                    close
+                    class="ma-2 testP"
+                    color="primary"
+                    label
+                  >
+                    <v-icon left> mdi-account-circle-outline </v-icon>
+                    <span>{{ item.user_name }} </span>
+                  </v-chip>
+                  <span v-if="index === 2" class="black--text text-caption">
+                    (+{{ chips.length - 2 }} others)
+                  </span>
+                </template>
+              </v-autocomplete>
             </div>
-            <!-- <div class="task-type">
-              <div class="type-text">
-                <p>Task Type :</p>
-              </div>
-              <div class="type-selcted">
-                <div
-                  class="selcted"
-                  @click="type = 1"
-                  v-bind:class="{ active: type === 1 }"
-                >
-                  <p>Instant</p>
-                </div>
-                <div
-                  class="selcted"
-                  @click="type = 2"
-                  v-bind:class="{ active: type === 2 }"
-                >
-                  <p>Schedule</p>
-                </div>
-              </div>
-            </div> -->
             <div class="schedule" v-if="type === 2">
               <p>Start Show Date</p>
               <div class="deadLine-date">
@@ -183,10 +203,14 @@
               <p>Estimated Time For Task :</p>
               <div class="deadLineEstimatedTime">
                 <div>
-                  <v-text-field
+                  <!-- <v-text-field
                     v-model="estimated_time"
                     label="HH : MM"
-                  ></v-text-field>
+                  ></v-text-field> -->
+                  <VueTimepicker
+                    v-model="yourData"
+                    @change="handleEstimatedTime"
+                  />
                 </div>
               </div>
             </div>
@@ -198,7 +222,14 @@
             Cancel
           </v-btn>
           <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="createNewTask"> Update</v-btn>
+          <v-btn
+            color="primary"
+            text
+            :disabled="!ableButton"
+            @click="createNewTask"
+          >
+            Update</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -209,7 +240,8 @@
 import Swal from "sweetalert2";
 import DatePicker from "./DatePicker.vue";
 import TimePicker from "./TimePicker.vue";
-import axios from 'axios';
+import VueTimepicker from "vue2-timepicker/src/vue-timepicker.vue";
+
 export default {
   name: "UpdateTask",
   props: {
@@ -226,6 +258,7 @@ export default {
       rules: [(v) => v.length <= 40 || "Max 40 characters"],
       rules2: [(v) => v.length <= 400 || "Max 400 characters"],
       chips: [],
+      chip: [],
       users: [],
       subject: "",
       description: "",
@@ -239,11 +272,25 @@ export default {
       creator: "",
       creator_name: "",
       claimed: false,
+      oldSubject: "",
+      oldDescription: "",
+      oldPriority: 3,
+      oldchips: [],
+      oldDue_date: "",
+      oldDue_time: "",
+      oldEstimated_time: "",
+      ableButton: false,
+      oldClaimed: false,
+      yourData: {
+        HH: "00",
+        mm: "00",
+      },
     };
   },
   components: {
     DatePicker,
     TimePicker,
+    VueTimepicker,
   },
   methods: {
     async getTaskData() {
@@ -259,10 +306,15 @@ export default {
     },
     showCreateTask() {
       this.CreateTaskDialog = true;
+      this.initData();
+      this.chickChanges();
+      this.ableButton = false;
     },
     remove(item) {
       this.chips.splice(this.chips.indexOf(item), 1);
       this.chips = [...this.chips];
+      this.chip.splice(this.chip.indexOf(item.user_id), 1);
+      this.chip = [...this.chip];
     },
     showDate() {
       this.dateToggle = !this.dateToggle;
@@ -270,18 +322,44 @@ export default {
     closeDate(date) {
       this.dateToggle = !this.dateToggle;
       this.due_date = date;
+      this.chickChanges();
     },
     closeDate2(date) {
       this.dateToggle2 = !this.dateToggle2;
       this.created_date = date;
+      this.chickChanges();
     },
     closeTime(time) {
       this.timeToggle = false;
       this.due_time = time;
+      this.chickChanges();
+    },
+    changePriority(n) {
+      this.priority = n;
+      this.chickChanges();
+    },
+    chageChips() {
+      console.log(this.chip);
+      const arr = [];
+      this.chip.forEach((ele) => {
+        const user = this.users.find((el) => {
+          return el.user_id === ele;
+        });
+        arr.push(user);
+        this.chips = arr;
+      });
+
+      this.chickChanges();
+    },
+    handleEstimatedTime() {
+      this.estimated_time = `${this.yourData.HH}:${this.yourData.mm}`;
+      console.log(this.estimated_time);
+      this, this.chickChanges();
     },
     async createNewTask() {
       const users_id = [];
       this.chips.forEach((element) => {
+        // const user = this.users.find((ele)=>{return ele.user_id ===element })
         users_id.push({ id: element.user_id, name: element.user_name });
       });
       if (!this.claimed && users_id.length === 0) {
@@ -290,8 +368,8 @@ export default {
 
       if (!this.claimed && users_id.length > 1) {
         console.log("do something");
-        console.log(this.task , "task");
-        
+        console.log(this.task, "task");
+
         const newTask = {
           creator: this.task.creator,
           creator_name: this.task.creator_name,
@@ -310,8 +388,6 @@ export default {
           refrenced: "",
         };
 
-        console.log(newTask , "new task");
-        
         const resData = await this.$axios.get(
           `/tasks-management/tasks/task/assign/${this.task.task_id}`
         );
@@ -334,21 +410,21 @@ export default {
           } else {
             chick = true;
             const res = await this.$axios.post(
-          `/tasks-management/tasks/task/update/${this.task.task_id}`,
-          {
-            subject: this.subject,
-            description: this.description,
-            claimed: this.claimed,
-            priority: this.priority,
-            due_date: this.due_date,
-            due_time: this.due_time,
-            estimated_time: this.estimated_time,
-          }
-        );
-        const as = await this.$axios.post(
-          "/tasks-management/tasks/task/assigneUser",
-          { task_id: res.data.task_id, user_id: [ele] }
-        );
+              `/tasks-management/tasks/task/update/${this.task.task_id}`,
+              {
+                subject: this.subject,
+                description: this.description,
+                claimed: this.claimed,
+                priority: this.priority,
+                due_date: this.due_date,
+                due_time: this.due_time,
+                estimated_time: this.estimated_time,
+              }
+            );
+            const as = await this.$axios.post(
+              "/tasks-management/tasks/task/assigneUser",
+              { task_id: res.data.task_id, user_id: [ele] }
+            );
           }
           if (!chick) {
             await this.$axios.post(`/tasks-management/tasks/task/resetAssign`, {
@@ -364,7 +440,9 @@ export default {
           timer: 1500,
         });
         setTimeout(() => {
-          window.location.reload();
+          // window.location.reload();
+          this.CreateTaskDialog = false;
+          this.$emit("closeDialog", newTask);
         }, 1500);
       } else {
         const res = await this.$axios.post(
@@ -402,19 +480,110 @@ export default {
       // Copy all v-select's items in your selectedItem array
       this.chips = [...this.users];
     },
+    chickChanges() {
+      console.log(this.yourData);
+      let index = false;
+      const ch = {};
+      if (this.oldSubject !== this.subject) {
+        index = true;
+        ch.oldSubject = this.oldSubject;
+        ch.subject = this.subject;
+      }
+      if (this.oldDescription !== this.description) {
+        index = true;
+        ch.oldSubject = this.oldSubject;
+        ch.description = this.subject;
+      }
+      if (this.oldPriority !== this.priority) {
+        index = true;
+        ch.oldPriority = this.oldPriority;
+        ch.priority = this.priority;
+      }
+      // if (this.oldchips !== this.chips){
+      //   index = true
+      //  ch.oldchips = this.oldchips
+      //  ch.chips = this.chips
+      // }
+      if (this.oldDue_date !== this.due_date) {
+        index = true;
+        ch.oldDue_date = this.oldDue_date;
+        ch.due_date = this.due_date;
+      }
+      if (this.oldDue_time !== this.due_time) {
+        index = true;
+        ch.oldDue_time = this.oldDue_time;
+        ch.due_time = this.due_time;
+      }
+      if (this.oldEstimated_time !== this.estimated_time) {
+        index = true;
+        ch.oldEstimated_time = this.oldEstimated_time;
+        ch.estimated_time = this.estimated_time;
+      }
+      if (this.oldClaimed !== this.claimed) {
+        index = true;
+        ch.oldClaimed = this.oldClaimed;
+        ch.claimed = this.claimed;
+      }
+
+      if (this.oldchips.length !== this.chips.length) {
+        index = true;
+        ch.oldchips = this.oldchips;
+        ch.chips = this.chips;
+      } else {
+        for (let i = 0; i < this.oldchips.length; i++) {
+          let foundUser = false;
+          for (let j = 0; j < this.chips.length; j++) {
+            if (this.oldchips[i].user_id === this.chips[j].user_id) {
+              foundUser = true;
+            }
+          }
+          if (!foundUser) {
+            index = true;
+            ch.oldchips = this.oldchips;
+            ch.chips = this.chips;
+            break;
+          }
+        }
+      }
+
+      this.ableButton = index;
+
+      console.log(index);
+      console.log(ch);
+    },
+    initData() {
+      this.getAllUsers();
+      this.subject = this.task.subject;
+      this.description = this.task.description;
+      this.priority = this.task.priority;
+      this.created_date = this.task.created_date;
+      this.due_date = this.task.due_date;
+      this.due_time = this.task.due_time;
+      this.estimated_time = this.task.estimated_time;
+      this.claimed = this.task.claimed;
+      this.chips = this.assignedUsers;
+      this.oldSubject = this.subject;
+      this.oldDescription = this.description;
+      this.oldPriority = this.priority;
+      this.oldchips = this.chips;
+      this.oldDue_date = this.due_date;
+      this.oldDue_time = this.due_time;
+      this.oldEstimated_time = this.estimated_time;
+      this.oldClaimed = this.claimed;
+      this.chip = this.assignedUsers.map((ele) => {
+        return ele.user_id;
+      });
+      console.log("chipppppppppppppppppppp , ", this.chip);
+      this.yourData = {
+        HH: this.estimated_time.split(":")[0],
+        mm: this.estimated_time.split(":")[1],
+      };
+    },
   },
   mounted() {
-    this.getAllUsers();
-    this.subject = this.task.subject;
-    this.description = this.task.description;
-    this.priority = this.task.priority;
-    this.created_date = this.task.created_date;
-    this.due_date = this.task.due_date;
-    this.due_time = this.task.due_time;
-    this.estimated_time = this.task.estimated_time;
-    this.claimed = this.task.claimed;
-    this.chips = this.assignedUsers;
+    this.initData();
   },
+  updated() {},
 };
 </script>
 
@@ -586,5 +755,9 @@ p {
 
 .deadLineEstimatedTime {
   width: 30%;
+}
+
+.testP {
+  padding: 10px;
 }
 </style>

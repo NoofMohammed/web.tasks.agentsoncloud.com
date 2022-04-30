@@ -38,13 +38,13 @@
             </div>
           </div>
           <v-icon
-            v-if="item.user_id === $store.state.userID"
+            v-if="item.user_id == userId"
             color="error"
             @click="deleteComment(index, item)"
             >mdi-delete</v-icon
           >
           <v-icon
-            v-if="item.user_id === $store.state.userID"
+            v-if="item.user_id == userId"
             color="error"
             @click="editComment(index, item)"
             >mdi-pencil</v-icon
@@ -74,6 +74,9 @@ export default {
   props: {
     replays: Array,
     comment_id: String,
+    taskCreator: String,
+    userId: String,
+    userName: String,
   },
   data() {
     return {
@@ -99,11 +102,11 @@ export default {
         return (this.commentError = "This field is required");
       }
       const newReplay = await this.$axios.post(
-        `/tasks-management/comments/addReplay`,
+        `/comments/comments/addReplay`,
         {
           comment_id: this.comment_id,
-          user_id: this.$store.state.userID,
-          user_name: this.$store.state.username,
+          user_id: this.userId,
+          user_name: this.userName,
           comment: this.comment,
         }
       );
@@ -122,7 +125,7 @@ export default {
     async deleteComment(index, item) {
       console.log(index, item);
       const res = await this.$axios.delete(
-        `/tasks-management/comments/deleteReplay/${item.replay_id}`
+        `/comments/comments/deleteReplay/${item.replay_id}`
       );
       this.editArray = this.replays
         .map((ele) => {

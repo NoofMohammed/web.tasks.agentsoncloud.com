@@ -35,12 +35,12 @@ export default {
     },
     async updateComment (){
       if(this.type ==="comment"){
-        const res = await this.$axios.put(`/tasks-management/comments/updateComment/${this.comment_id}` ,{newComment : this.text})
+        const res = await this.$axios.put(`/comments/comments/updateComment/${this.comment_id}` ,{newComment : this.text})
       if(res.status === 200) {
         this.$emit("updateComment", this.comment_id,  this.text)
       }
       }else {
-        const res = await this.$axios.put(`/tasks-management/comments/updateReplay/${this.comment_id}` ,{newComment : this.text})
+        const res = await this.$axios.put(`/comments/comments/updateReplay/${this.comment_id}` ,{newComment : this.text})
         console.log(res.data);
       if(res.status === 200) {
         this.$emit("updateReplay", this.comment_id,  this.text)
