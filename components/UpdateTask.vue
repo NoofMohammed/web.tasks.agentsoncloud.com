@@ -113,7 +113,6 @@
                 item-value="user_id"
                 item-text="user_name"
                 multiple
-                chip
                 clearable
                 class="assingee"
                 flat
@@ -306,7 +305,7 @@ export default {
     },
     showCreateTask() {
       this.CreateTaskDialog = true;
-      this.initData();
+      // this.initData();
       this.chickChanges();
       this.ableButton = false;
     },
@@ -315,6 +314,7 @@ export default {
       this.chips = [...this.chips];
       this.chip.splice(this.chip.indexOf(item.user_id), 1);
       this.chip = [...this.chip];
+      this.chickChanges();
     },
     showDate() {
       this.dateToggle = !this.dateToggle;
@@ -524,7 +524,7 @@ export default {
         ch.oldClaimed = this.oldClaimed;
         ch.claimed = this.claimed;
       }
-
+      console.log(this.oldchips, this.chips);
       if (this.oldchips.length !== this.chips.length) {
         index = true;
         ch.oldchips = this.oldchips;
@@ -552,7 +552,6 @@ export default {
       console.log(ch);
     },
     initData() {
-      this.getAllUsers();
       this.subject = this.task.subject;
       this.description = this.task.description;
       this.priority = this.task.priority;
@@ -561,11 +560,11 @@ export default {
       this.due_time = this.task.due_time;
       this.estimated_time = this.task.estimated_time;
       this.claimed = this.task.claimed;
-      this.chips = this.assignedUsers;
+      this.chips = [...this.assignedUsers];
       this.oldSubject = this.subject;
       this.oldDescription = this.description;
       this.oldPriority = this.priority;
-      this.oldchips = this.chips;
+      this.oldchips = [...this.assignedUsers];
       this.oldDue_date = this.due_date;
       this.oldDue_time = this.due_time;
       this.oldEstimated_time = this.estimated_time;
@@ -574,6 +573,8 @@ export default {
         return ele.user_id;
       });
       console.log("chipppppppppppppppppppp , ", this.chip);
+      console.log("chippppppppppppppppppppssssss , ", this.oldchips);
+
       this.yourData = {
         HH: this.estimated_time.split(":")[0],
         mm: this.estimated_time.split(":")[1],
@@ -581,6 +582,7 @@ export default {
     },
   },
   mounted() {
+    this.getAllUsers();
     this.initData();
   },
   updated() {},

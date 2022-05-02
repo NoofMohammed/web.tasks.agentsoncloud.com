@@ -137,7 +137,7 @@
                     color="primary"
                     label
                   >
-                    <v-icon left> mdi-account-circle-outline </v-icon>
+                    <v-icon small left> mdi-account-circle-outline </v-icon>
                     <span>{{ item.user_name }} </span>
                   </v-chip>
                   <span v-if="index === 2" class="black--text text-caption">
@@ -472,6 +472,8 @@ export default {
     remove(item) {
       this.chips.splice(this.chips.indexOf(item), 1);
       this.chips = [...this.chips];
+      this.chip.splice(this.chip.indexOf(item.user_id), 1);
+      this.chip = [...this.chip];
     },
     showDate() {
       this.dateToggle = !this.dateToggle;
@@ -954,7 +956,9 @@ p {
 }
 
 .testP {
-  padding: 10px;
+  /* width: 40% !important; */
+  font-size: 12px !important;
+  padding: 10px 5px !important;
 }
 
 .errorMsg {

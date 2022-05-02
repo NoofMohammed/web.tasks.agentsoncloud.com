@@ -261,7 +261,7 @@
         <div class="header-msg">
           <p>
             You are sure you want to delete<br />
-            This Task, {{task.subject}}?
+            This Task, {{ task.subject }}?
           </p>
           <div>
             <button class="btn-cancel" @click="deleteDialog = false">
@@ -467,6 +467,7 @@ export default {
       }
     },
     async newTask(data) {
+      console.log("newTask");
       this.task = data;
       const res = await this.$axios.get(
         `/tasks-management/tasks/task/assign/${this.id}`
@@ -475,6 +476,7 @@ export default {
       this.taskLogs = await this.getTaskLogs();
     },
     closeDialog() {
+      console.log("closeDialog");
       this.getData();
       this.$emit("getCreated");
     },

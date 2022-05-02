@@ -244,33 +244,40 @@
 
             <v-card-text v-if="created && assignToggle">
               <div class="assingee-div">
-                <v-combobox
-                  v-model="chips"
+                <v-autocomplete
+                  v-model="chip"
                   :items="users"
                   item-value="user_id"
                   item-text="user_name"
-                  chips
-                  clearable
-                  label="Enter Nmae"
                   multiple
-                  prepend-icon="mdi-filter-variant"
+                  clearable
                   class="assingee"
+                  flat
+                  hide-no-data
+                  hide-details
+                  background-color="#FAFAFA"
+                  label="Enter Nmae"
+                  solo
+                  prepend-icon="mdi-filter-variant"
+                  @change="chageChips"
                 >
-                  <template
-                    v-slot:selection="{ attrs, item, select, selected }"
-                  >
+                  <template v-slot:selection="{ item, index }">
                     <v-chip
-                      v-bind="attrs"
-                      :input-value="selected"
-                      close
-                      @click="select"
+                      v-if="index === 0 || index === 1"
                       @click:close="remove(item)"
-                      class="overFFF"
+                      close
+                      class="ma-2 testP"
+                      color="primary"
+                      label
                     >
-                      <strong>{{ item.user_name }}</strong>
+                      <v-icon left> mdi-account-circle-outline </v-icon>
+                      <span>{{ item.user_name }} </span>
                     </v-chip>
+                    <span v-if="index === 2" class="black--text text-caption">
+                      (+{{ chips.length - 2 }} others)
+                    </span>
                   </template>
-                </v-combobox>
+                </v-autocomplete>
                 <v-card-text v-if="created">
                   <v-btn text width="450" color="primary" @click="reassign">
                     Reassign
@@ -464,6 +471,7 @@ export default {
       seeAssigneeToggle: false,
       assignedUser: [],
       chips: [],
+      chip: [],
       users: [],
       inimation: false,
       categorys: ["All", "today", "tomorrow", "this week", "last week"],
@@ -760,7 +768,6 @@ export default {
     async getAllUsers() {
       const users = await this.$axios.get("/ecm/users/users");
       this.users = users.data;
-      console.log("users", users.data);
     },
     async showAssignDiv() {
       this.assignToggle = !this.assignToggle;
@@ -768,10 +775,18 @@ export default {
         `/tasks-management/tasks/task/assign/${this.currentTask.task_id}`
       );
       this.chips = res.data;
+      const arr = [];
+      res.data.forEach((ele) => {
+        arr.push(ele.user_id);
+      });
+      console.log(arr);
+      this.chip = arr;
     },
     remove(item) {
       this.chips.splice(this.chips.indexOf(item), 1);
       this.chips = [...this.chips];
+      this.chip.splice(this.chip.indexOf(item.user_id), 1);
+      this.chip = [...this.chip];
     },
     async reassign() {
       const users_id = [];
@@ -877,6 +892,16 @@ export default {
     },
     taskName(newName) {
       this.newTaskName = newName;
+    },
+    chageChips() {
+      const arr = [];
+      this.chip.forEach((ele) => {
+        const user = this.users.find((el) => {
+          return el.user_id === ele;
+        });
+        arr.push(user);
+        this.chips = arr;
+      });
     },
   },
   created() {
@@ -1038,6 +1063,12 @@ h3 {
 .assigned-text {
   margin-top: 20px;
   text-align: center;
+}
+
+.testP {
+  /* width: 45% !important; */
+  font-size: 12px !important;
+  padding: 10px 5px !important;
 }
 
 /*---------------------------------------------------------------------------------------------------- */
