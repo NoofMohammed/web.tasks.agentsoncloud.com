@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="taskFullView" width="80%" persistent>
+  <v-dialog v-model="taskFullView" width="75%" class="full" persistent>
     <v-card class="card">
       <v-icon color="red" x-large class="close" @click="closeFullView"
         >mdi-close-circle</v-icon
@@ -52,6 +52,7 @@ export default {
 <style lang="scss" scoped>
 .card {
   position: relative;
+  overflow-x: hidden;
 }
 
 .close {

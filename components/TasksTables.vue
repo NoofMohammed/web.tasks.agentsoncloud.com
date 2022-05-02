@@ -281,7 +281,7 @@
           </v-card>
         </v-dialog>
 
-        <v-dialog v-model="dialog2" width="500">
+        <!-- <v-dialog v-model="dialog2" width="500">
           <v-card>
             <v-card-title class="text-h5 grey lighten-2 popupText">
               Do you want to delete this task
@@ -296,7 +296,29 @@
               <v-btn color="primary" text @click="deleteTask"> delete</v-btn>
             </v-card-actions>
           </v-card>
-        </v-dialog>
+        </v-dialog> -->
+
+        <div v-if="dialog2">
+          <div class="overlay__content">
+            <div class="header-msg">
+              <h3>Delete Task</h3>
+              <v-icon class="icon">mdi-delete-forever</v-icon>
+            </div>
+            <div class="header-msg">
+              <p>
+                You are sure you want to delete<br />
+                This Task, {{ currentTask.subject }}?
+              </p>
+              <div>
+                <button class="btn-cancel" @click="dialog2 = false">
+                  Cancel
+                </button>
+                <button class="btn-delete" @click="deleteTask">Delete</button>
+              </div>
+            </div>
+          </div>
+          <div class="overlay"></div>
+        </div>
 
         <v-dialog v-model="seeAssigneeToggle" width="500">
           <v-card>
@@ -1017,4 +1039,62 @@ h3 {
   margin-top: 20px;
   text-align: center;
 }
+
+/*---------------------------------------------------------------------------------------------------- */
+
+.delete-message {
+  margin-top: 20px;
+}
+
+.header-msg {
+  display: flex;
+  justify-content: space-between;
+  align-items: center !important;
+}
+p {
+  color: rgb(0 0 0 / 55%);
+}
+.btn-delete {
+  color: #22619e;
+  cursor: pointer;
+  margin-top: 10px;
+  margin-right: 10px;
+  font-weight: bold;
+}
+.btn-cancel {
+  color: rgb(0 0 0 / 55%);
+  cursor: pointer;
+  margin-top: 10px;
+  margin-right: 10px;
+  font-weight: bold;
+}
+.icon {
+  color: red;
+  font-size: 50px;
+  margin-right: 50px;
+}
+body {
+  height: 100vh;
+  position: relative;
+}
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(23, 25, 28, 0.7);
+}
+.overlay__content {
+  background-color: #fff;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  width: 40%;
+  padding: 2em 1em 1.5em;
+  font-size: 1.2em;
+  border-radius: 0.3em;
+  box-shadow: 6px 6px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* -------------------------------------------------------------------------------------*/
 </style>
