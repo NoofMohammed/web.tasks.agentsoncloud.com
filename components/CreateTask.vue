@@ -578,6 +578,7 @@ export default {
             ? "0" + today.getHours()
             : today.getHours() + "";
         let min = today.getMinutes() + "";
+        if(min.length ===1) min = "0"+min
 
         this.created_time = hour + ":" + min;
         // if (hour < 10) {
